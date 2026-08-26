@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TCC Marketplace — USDT Platform</title>
+<title>TOS Marketplace</title>
 
 <!-- ── Favicon & App Icons ── -->
 <link rel="icon" type="image/png" href="https://i.ibb.co/7dNgfK3t/TCC-Marketplace-Logo.png">
@@ -12,19 +12,19 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="TCC Market">
+<meta name="apple-mobile-web-app-title" content="TOS Market">
 
 <!-- ── Open Graph / Social ── -->
-<meta property="og:title" content="TCC Marketplace — USDT Platform">
+<meta property="og:title" content="TOS Marketplace ">
 <meta property="og:description" content="ซื้อขายสินค้าด้วย USDT รับ Funding Free ทุกการสั่งซื้อ พร้อมระบบ Referral Commission อัตโนมัติ">
 <meta property="og:image" content="https://i.ibb.co/7Ny5bGnQ/Share-Card.png">
 <meta property="og:image:width" content="1456">
 <meta property="og:image:height" content="816">
-<meta property="og:image:alt" content="TCC Marketplace — Funding Fee Platform">
+<meta property="og:image:alt" content="TOS Marketplace Platform">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="TCC Marketplace — USDT Platform">
-<meta name="twitter:description" content="ซื้อขายสินค้าด้วย USDT รับ Funding Free ทุกการสั่งซื้อ พร้อมระบบ Referral Commission อัตโนมัติ">
+<meta name="twitter:title" content="TOS Marketplace Platform">
+<meta name="twitter:description" content="ซื้อขายสินค้า รับ Funding Free ทุกการสั่งซื้อ พร้อมระบบ Referral Commission อัตโนมัติ">
 <meta name="twitter:image" content="https://i.ibb.co/7Ny5bGnQ/Share-Card.png">
 
 <!-- Google Fonts -->
@@ -213,7 +213,7 @@ a{color:var(--green);text-decoration:none}
   top:-60px;right:-40px;pointer-events:none;
 }
 .welcome-card::after{
-  content:'SmartPlus';position:absolute;right:-10px;top:50%;transform:translateY(-50%);
+  content:'Plus';position:absolute;right:-10px;top:50%;transform:translateY(-50%);
   font-family:var(--font-h);font-size:72px;font-weight:700;color:rgba(34,197,94,.04);
   white-space:nowrap;pointer-events:none;
 }
@@ -1217,9 +1217,9 @@ a{color:var(--green);text-decoration:none}
   <div class="login-box">
     <div class="logo">
       <div class="logo-icon">
-        <img src="https://i.ibb.co/fVKWjCQS/Smp-Logo-png.png" alt="SmartPlus Logo">
+        <img src="https://i.ibb.co/7dNgfK3t/TCC-Marketplace-Logo.png" alt="Plus Logo">
       </div>
-      <div class="logo-title">SmartPlus</div>
+      <div class="logo-title">TOS Marketplace</div>
       <div class="logo-sub">Member Portal</div>
     </div>
 
@@ -1277,9 +1277,9 @@ a{color:var(--green);text-decoration:none}
   <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-logo">
-      <img src="https://i.ibb.co/fVKWjCQS/Smp-Logo-png.png" alt="SmartPlus Logo">
+      <img src="https://i.ibb.co/fVKWjCQS/Smp-Logo-png.png" alt="Plus Logo">
       <div>
-        <div class="logo-title">SmartPlus</div>
+        <div class="logo-title">TOS Marketplace</div>
         <div style="font-size:10px;color:var(--text-s);letter-spacing:1px;text-transform:uppercase">Member Portal</div>
       </div>
     </div>
@@ -1497,7 +1497,7 @@ a{color:var(--green);text-decoration:none}
         <button class="chat-sidebar-btn" onclick="openSidebar()" title="ห้องแชท">☰</button>
         <div class="chat-hdr-av"><span id="chat-hdr-av-letter">S</span></div>
         <div style="flex:1">
-          <div class="chat-hdr-name" id="chat-hdr-name">SmartPlus Group</div>
+          <div class="chat-hdr-name" id="chat-hdr-name">TOS Marketplace Group</div>
           <div class="chat-hdr-sub" id="chat-status">ห้องสนทนากลุ่ม</div>
         </div>
         <button class="chat-hbtn" onclick="loadChatV2(true)" title="รีเฟรช"><i data-lucide="refresh-cw"></i></button>
@@ -1944,7 +1944,7 @@ a{color:var(--green);text-decoration:none}
         </div>
 
         <div style="text-align:center;margin-top:24px;font-size:11px;color:var(--text-d);padding-bottom:16px">
-          SmartPlus USA v2.0 — Powered by Trader Cafe Club
+          Plus USA v2.0 — Powered by Trader Cafe Club
         </div>
       </div>
 
@@ -5900,9 +5900,9 @@ async function loadChat(force=false){
       const newM = msgs[msgs.length-1];
       const senderName = newM.user_name||newM.UserName||'สมาชิก';
       if((newM.user_email||newM.UserEmail||'') !== myEmail){
-        new Notification(`SmartPlus · ${senderName}`,{
+        new Notification(`Plus · ${senderName}`,{
           body: newM.message||newM.Message||'',
-          icon:'https://smartplusthailand.com/favicon.ico'
+          icon:'https://plusthailand.com/favicon.ico'
         });
       }
     }
@@ -6023,7 +6023,7 @@ async function sendImage(event){
         created_at: new Date().toISOString()
       });
     } else {
-      // Legacy: SmartPlus Group
+      // Legacy: Plus Group
       await API.create(CFG.sheets.chat,{
         message: msgText, user_email: myEmail,
         user_name: myName, created_at: new Date().toISOString()
@@ -6436,7 +6436,7 @@ async function checkChatBadge(){
 
 /* ─── State ─── */
 let currentRoomId   = null;   // ห้องที่กำลังเปิดอยู่ (null = group เดิม)
-let currentRoomName = 'SmartPlus Group';
+let currentRoomName = 'Plus Group';
 let currentRoomType = 'group';
 let chatRooms       = [];
 let friendsList     = [];
@@ -6525,9 +6525,9 @@ function renderRoomList(){
   const isAdmin = AUTH.user?.role==='admin';
 
   let html = `
-    <div class="room-item${!currentRoomId?' active':''}" onclick="switchRoom(null,'SmartPlus Group','group')">
+    <div class="room-item${!currentRoomId?' active':''}" onclick="switchRoom(null,'Plus Group','group')">
       <div class="room-av" style="background:linear-gradient(135deg,var(--green-d),var(--green))">S</div>
-      <div class="room-info"><div class="room-name">SmartPlus Group</div><div class="room-sub">ห้องสนทนาหลัก</div></div>
+      <div class="room-info"><div class="room-name">Plus Group</div><div class="room-sub">ห้องสนทนาหลัก</div></div>
     </div>`;
 
   chatRooms.forEach(r=>{
@@ -6583,7 +6583,7 @@ const CHAT_MIN_INTERVAL = 8000; // ✅ โหลดใหม่ได้ทุ�
 async function loadChatV2(force=false){
   // Route: currentRoomId set → v2 messages table; null → legacy chat table
   if(!currentRoomId){
-    return loadChat(force); // SmartPlus Group legacy
+    return loadChat(force); // Plus Group legacy
   }
   if(!CFG.sheets.messages){
     const el=qs('chat-msgs');
@@ -7038,7 +7038,7 @@ async function adminDeleteRoom(roomId, roomName){
   if(!confirm(`ลบห้อง "${roomName}"? ข้อความทั้งหมดจะหายไปด้วย`)) return;
   try{
     await ChatAPI.deleteRoom(roomId);
-    if(currentRoomId===roomId) switchRoom(null,'SmartPlus Group','group');
+    if(currentRoomId===roomId) switchRoom(null,'Plus Group','group');
     toast(`🗑 ลบห้อง "${roomName}" แล้ว`,'success');
     await loadRoomList(true);
   }catch(e){ toast('ลบไม่สำเร็จ: '+e.message,'error'); }
@@ -7109,7 +7109,7 @@ async function toggleNotif(){
     chip.textContent = on?'เปิด':'ปิด';
     chip.className   = on?'chip chip-green':'chip chip-gold';
     toast(on?'เปิดการแจ้งเตือนแล้ว':'ปิดการแจ้งเตือนแล้ว','info');
-    if(on) new Notification('SmartPlus',{body:'เปิดการแจ้งเตือนสำเร็จ! 🎉',icon:'https://smartplusthailand.com/favicon.ico'});
+    if(on) new Notification('Plus',{body:'เปิดการแจ้งเตือนสำเร็จ! 🎉',icon:'https://plusthailand.com/favicon.ico'});
   } else { toast('ไม่ได้รับอนุญาตแจ้งเตือน','error'); }
 }
 
