@@ -4024,6 +4024,252 @@ async function deleteProduct(id,name){
 }
 
 /* ── Orders ── */
+/* ================================================================
+   BANNERS — จัดการแบนเนอร์โฆษณา
+================================================================ */
+let _adminBanners = [], _bannerFilter = 'all', _bmFile = null, _bmEditId = null;
+
+const POS_LABEL = { hero:'Hero', leaderboard:'Leaderboard', rectangle:'Rectangle', mobile:'Mobile' };
+const POS_SIZE  = { hero:'1200×400', leaderboard:'728×90', rectangle:'300×250', mobile:'320×100' };
+
+/* ── โหลดแบนเนอร์ทั้งหมด ── */
+async function loadAdminBanners(){
+  if(!ADMIN.tbl.banners){
+    const g=qs('banners-grid');
+    if(g) g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-s)">ยังไม่ได้ตั้งค่า Banners Table</div>';
+    return;
+  }
+  try{
+    const d = await API.list(ADMIN.tbl.banners,{limit:200,sort:'position'});
+    _adminBanners = d.list||[];
+    renderBannersGrid();
+  }catch(e){ toast('โหลดแบนเนอร์ไม่ได้: '+e.message,'error'); }
+}
+
+/* ── Filter ── */
+function setBannerFilter(f,el){
+  _bannerFilter=f;
+  document.querySelectorAll('#page-banners .btn-outline').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  renderBannersGrid();
+}
+
+/* ── Render grid ── */
+function renderBannersGrid(){
+  const grid=qs('banners-grid'); if(!grid)return;
+  let list = _bannerFilter==='all' ? _adminBanners : _adminBanners.filter(b=>(b.position||b.Position||'')===_bannerFilter);
+  if(!list.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:32px;color:var(--text-s)">ยังไม่มีแบนเนอร์ในตำแหน่งนี้</div>';
+    return;
+  }
+  grid.innerHTML = list.map(b=>{
+    const id    = b.id||b.Id;
+    const pos   = b.position||b.Position||'hero';
+    const title = b.title||b.Title||'(ไม่มีชื่อ)';
+    const imgUrl= b.image_url||b.ImageUrl||'';
+    const link  = b.link_url||b.LinkUrl||'';
+    const active= b.is_active==='TRUE'||b.is_active===true||b.is_active==='true';
+    const order = b.position||b.Position||0;
+    const isVid = /\.(mp4|webm|ogg)(\?.*)?$/i.test(imgUrl);
+    const mediaHtml = imgUrl
+      ? (isVid
+          ? `<video src="${imgUrl}" autoplay muted loop playsinline style="width:100%;height:120px;object-fit:cover;display:block"></video>`
+          : `<img src="${imgUrl}" alt="${title}" style="width:100%;height:120px;object-fit:cover;display:block" onerror="this.style.display='none'">`)
+      : `<div style="width:100%;height:120px;display:flex;align-items:center;justify-content:center;font-size:32px;background:var(--surface)">🖼️</div>`;
+    return `<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+      <div style="position:relative">
+        ${mediaHtml}
+        <span style="position:absolute;top:6px;left:6px" class="pos-chip pos-${pos}">${POS_LABEL[pos]||pos}</span>
+        <span style="position:absolute;top:6px;right:6px;background:${active?'rgba(34,197,94,.85)':'rgba(239,68,68,.8)'};color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px">${active?'✅ ใช้งาน':'🚫 ปิด'}</span>
+      </div>
+      <div style="padding:10px 12px">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${title}</div>
+        <div style="font-size:10px;color:var(--text-s);margin-bottom:8px">${POS_SIZE[pos]||''} ${link?'· 🔗 มีลิงก์':''}</div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-outline btn-sm" style="flex:1" onclick="editBanner('${id}')">✏️ แก้ไข</button>
+          <button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteBanner('${id}','${title.replace(/'/g,'')}')">🗑</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleBannerActive('${id}',${active})" title="${active?'ปิด':'เปิด'}">
+            ${active?'🔕':'🔔'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Open modal (Add) ── */
+function openAddBannerModal(){
+  _bmFile=null; _bmEditId=null;
+  qs('banner-modal-title').textContent='เพิ่มแบนเนอร์';
+  qs('bm-edit-id').value='';
+  ['bm-title','bm-link','bm-url-input'].forEach(id=>{if(qs(id))qs(id).value='';});
+  ['bm-start','bm-end'].forEach(id=>{if(qs(id))qs(id).value='';});
+  if(qs('bm-order')) qs('bm-order').value='0';
+  if(qs('bm-active')) qs('bm-active').checked=true;
+  bmResetPreview();
+  // เลือก hero เป็น default
+  document.querySelectorAll('#bm-pos-grid .pay-method-card').forEach(c=>c.classList.remove('active'));
+  const heroCard=document.querySelector('#bm-pos-grid [data-pos="hero"]');
+  if(heroCard) heroCard.classList.add('active');
+  if(qs('bm-upload-hint')) qs('bm-upload-hint').style.display='block';
+  qs('banner-modal').style.display='flex';
+}
+
+/* ── Open modal (Edit) ── */
+function editBanner(id){
+  const b=_adminBanners.find(x=>String(x.id||x.Id)===String(id));
+  if(!b) return;
+  _bmFile=null; _bmEditId=id;
+  qs('banner-modal-title').textContent='แก้ไขแบนเนอร์';
+  qs('bm-edit-id').value=id;
+  if(qs('bm-title')) qs('bm-title').value=b.title||b.Title||'';
+  if(qs('bm-link'))  qs('bm-link').value =b.link_url||b.LinkUrl||'';
+  if(qs('bm-order')) qs('bm-order').value=b.position||b.Position||0;
+  if(qs('bm-active')) qs('bm-active').checked=(b.is_active==='TRUE'||b.is_active===true||b.is_active==='true');
+  // dates
+  ['start_date','end_date'].forEach((field,i)=>{
+    const val=b[field]||b[field.replace(/_(.)/g,(_,c)=>c.toUpperCase())]||'';
+    const inputId=['bm-start','bm-end'][i];
+    if(val && qs(inputId)){
+      try{ const d=new Date(val); if(!isNaN(d.getTime())) qs(inputId).value=d.toISOString().slice(0,16); }catch{}
+    }
+  });
+  // position
+  document.querySelectorAll('#bm-pos-grid .pay-method-card').forEach(c=>c.classList.remove('active'));
+  const pos=b.position||b.Position||'hero';
+  const posCard=document.querySelector(`#bm-pos-grid [data-pos="${pos}"]`);
+  if(posCard) posCard.classList.add('active');
+  // preview existing image
+  const imgUrl=b.image_url||b.ImageUrl||'';
+  if(qs('bm-url-input')) qs('bm-url-input').value=imgUrl;
+  if(imgUrl){ bmUrlPreview(imgUrl); } else { bmResetPreview(); }
+  if(qs('bm-upload-hint')) qs('bm-upload-hint').style.display='block';
+  qs('banner-modal').style.display='flex';
+}
+
+function closeBannerModal(){ qs('banner-modal').style.display='none'; _bmFile=null; }
+
+/* ── Position selector ── */
+function bmSelectPos(el,pos){
+  document.querySelectorAll('#bm-pos-grid .pay-method-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+}
+function bmGetPos(){
+  const active=document.querySelector('#bm-pos-grid .pay-method-card.active');
+  return active ? (active.dataset.pos||'hero') : 'hero';
+}
+
+/* ── File upload ── */
+function bmHandleFile(ev){ const f=ev.target.files[0]; if(f) bmSetFile(f); }
+function bmHandleDrop(ev){
+  ev.preventDefault();
+  const f=ev.dataTransfer?.files?.[0]; if(f) bmSetFile(f);
+  const zone=qs('bm-upload-zone'); if(zone) zone.classList.remove('drag');
+}
+function bmSetFile(file){
+  _bmFile=file;
+  const isVid=/video/.test(file.type);
+  const url=URL.createObjectURL(file);
+  const frame=qs('bm-preview-frame');
+  const img=qs('bm-preview-img'); const vid=qs('bm-preview-vid');
+  if(frame) frame.style.display='block';
+  if(img){ img.style.display=isVid?'none':'block'; if(!isVid) img.src=url; }
+  if(vid){ vid.style.display=isVid?'block':'none'; if(isVid){ vid.src=url; vid.load(); } }
+  if(qs('bm-upload-hint')) qs('bm-upload-hint').style.display='none';
+  if(qs('bm-url-input')) qs('bm-url-input').value=''; // ล้าง URL input
+}
+function bmUrlPreview(url){
+  if(!url.trim()){ bmResetPreview(); return; }
+  _bmFile=null; // ล้างไฟล์ที่เลือกไว้
+  const isVid=/\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+  const frame=qs('bm-preview-frame');
+  const img=qs('bm-preview-img'); const vid=qs('bm-preview-vid');
+  if(frame) frame.style.display='block';
+  if(img){ img.style.display=isVid?'none':'block'; if(!isVid) img.src=url; }
+  if(vid){ vid.style.display=isVid?'block':'none'; if(isVid){ vid.src=url; vid.load(); } }
+}
+function bmResetPreview(){
+  const frame=qs('bm-preview-frame'); if(frame) frame.style.display='none';
+  const img=qs('bm-preview-img'); if(img){ img.src=''; img.style.display='none'; }
+  const vid=qs('bm-preview-vid'); if(vid){ vid.src=''; vid.style.display='none'; }
+}
+
+/* ── Save (Create / Update) ── */
+async function saveBanner(){
+  if(!ADMIN.tbl.banners){ toast('ยังไม่ได้ตั้งค่า Banners Table','warn'); return; }
+  const title    = (qs('bm-title')?.value||'').trim();
+  const linkUrl  = (qs('bm-link')?.value||'').trim();
+  const urlInput = (qs('bm-url-input')?.value||'').trim();
+  const pos      = bmGetPos();
+  const order    = parseInt(qs('bm-order')?.value||0)||0;
+  const active   = qs('bm-active')?.checked!==false;
+  const startVal = qs('bm-start')?.value||'';
+  const endVal   = qs('bm-end')?.value||'';
+  const editId   = qs('bm-edit-id')?.value||'';
+
+  const saveBtn=qs('bm-save-btn');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='กำลังบันทึก...'; }
+
+  try{
+    // อัปโหลดไฟล์ถ้ามี
+    let finalUrl = urlInput;
+    if(_bmFile){
+      if(saveBtn) saveBtn.textContent='⏳ กำลังอัปโหลดรูป...';
+      const { url:uploaded } = await API.uploadFile(_bmFile);
+      finalUrl = uploaded;
+    }
+
+    if(!finalUrl){ toast('กรุณาเลือกไฟล์ หรือใส่ URL','warn'); return; }
+
+    const data = {
+      title,
+      image_url:  finalUrl,
+      link_url:   linkUrl,
+      position:   pos,
+      is_active:  active,
+    };
+    // datetime fields — guard Invalid Date
+    if(startVal){ const d=new Date(startVal); if(!isNaN(d.getTime())) data.start_date=d.toISOString(); }
+    if(endVal)  { const d=new Date(endVal);   if(!isNaN(d.getTime())) data.end_date=d.toISOString(); }
+
+    if(editId){
+      await API.update(ADMIN.tbl.banners, editId, data);
+      toast('อัปเดตแบนเนอร์แล้ว ✅','success');
+    } else {
+      await API.create(ADMIN.tbl.banners, data);
+      toast('เพิ่มแบนเนอร์แล้ว ✅','success');
+    }
+    closeBannerModal();
+    loadAdminBanners();
+  }catch(e){
+    console.error('saveBanner error:',e);
+    toast('บันทึกไม่สำเร็จ: '+e.message,'error');
+  }finally{
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='💾 บันทึกแบนเนอร์'; }
+  }
+}
+
+/* ── Toggle active ── */
+async function toggleBannerActive(id, currentActive){
+  try{
+    await API.update(ADMIN.tbl.banners, id, { is_active: !currentActive });
+    toast(currentActive?'ปิดแบนเนอร์แล้ว':'เปิดแบนเนอร์แล้ว','success');
+    loadAdminBanners();
+  }catch(e){ toast('เปลี่ยนสถานะไม่สำเร็จ: '+e.message,'error'); }
+}
+
+/* ── Delete ── */
+async function deleteBanner(id, title){
+  const ok=await showConfirmModal('ลบแบนเนอร์',`ต้องการลบ "${title}" ใช่ไหม?`,'ลบ','ยกเลิก');
+  if(!ok) return;
+  try{
+    await API.delete(ADMIN.tbl.banners, id);
+    toast('ลบแบนเนอร์แล้ว','success');
+    loadAdminBanners();
+  }catch(e){ toast('ลบไม่สำเร็จ: '+e.message,'error'); }
+}
+
+/* ── Orders ── */
 async function loadAdminOrders(){
   if(!ADMIN.tbl.orders){
     const tb=qs('orders-tbody');
